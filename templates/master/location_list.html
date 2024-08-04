@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+{% extends 'index.html' %}
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <main id="main" class="main">
+        <div class="pagetitle">
+          <h1>Location</h1>
+          <nav>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+              <li class="breadcrumb-item">Master</li>
+              <li class="breadcrumb-item active">Location List</li>
+            </ol>
+          </nav>
+        </div>
+        <section class="section">
+          <div class="row">
+              <div class="col-lg-12">
+                  <div class="card border border-primary">
+                      <div class="card-body">
+                          <div class="card-title">
+                              <div class="d-lg-flex">
+                                  <div>
+                                      <h5 class="card-heading">List Of Department</h5>
+                                  </div>
+                                  <div class="ms-auto my-auto mt-lg-0 mt-4 d-flex">
+                                      <div class="mr-2">
+                                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
+                                              Upload
+                                          </button>
+                                      </div>
+                                      <div class="mr-2">
+                                        <a href="{% url 'export_location' %}">
+                                            <buttontype="submit" class="btn btn-primary">
+                                                Export 
+                                            </button>
+                                        </a>
+                                    </div>
+                                     
+                                      <div>
+                                          <a href="{% url 'locationn_add' %}">
+                                              <button type="button" class="btn btn-success">
+                                                  <i class="bi bi-plus-circle me-1"></i> Add Location
+                                              </button>
+                                          </a>
+                                      </div>
+                                      </div>
+                                  </div>
+    </div>
+                  <table
+                    class="display responsive"
+                    style="width: 100%"
+                    id="locTable"
+                  >
+                    <thead>
+                      <tr>
+                        <th scope="col" class="text-md dt-nowrap">Sl.No</th>
+                        <th scope="col" class="text-md dt-nowrap">Actions</th>
+                        <th scope="col" class="text-md dt-nowrap">Location Name</th>
+                        <th scope="col" class="text-md dt-nowrap">Description</th>
+
+                       
+                       
+                      </tr>
+
+                
+                    </thead>
+                    <tbody>
+                        {% for d in location %}
+                      <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td
+                          class="justify-content-center align-content-center"
+                          style="min-height: 100% !important; min-width: 100%"
+                        >
+                          <div class="d-flex">
+                           
+                            <a href="{% url 'locationn_edit'  d.location_id %}">
+                              <button
+                                type="button"
+                                class="btn btn-outline-info"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Edit"
+                              >
+                                <i class="bi bi-pencil-fill"></i>
+                              </button> </a
+                            >&nbsp;
+                            <a href="{% url 'locationn_detail'  d.location_id %}">
+                              <button
+                                type="button"
+                                class="btn btn-outline-success"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Details"
+                              >
+                                <i class="bi bi-eye-fill"></i>
+                              </button> </a
+                            >&nbsp;
+                            <a href="{% url 'locationn_delete' d.location_id %}">
+                            <button
+                              type="button"
+                              class="btn btn-outline-danger"
+                              data-bs-toggle="modal"
+                              data-bs-target="#deleteModal"
+                              title="Delete"
+                            >
+                              <i class="bi bi-trash-fill"></i>
+                            </button>
+                            &nbsp;
+                          </div>
+                        </td>
+                        <td class="dt-nowrap">{{d.location_name}}</td>
+                        <td class="dt-nowrap">{{d.description}}</td>
+
+                        
+                        
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="spacex mb-5"></div>
+      </main>
+      <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Excel File</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'bulk_upload_location' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="file">Choose Excel file</label>
+                            <input type="file" id="file" name="file" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+   
+     
+</body>
+</html>
+{% endblock %}
