@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 {% extends 'index.html' %}
 {% block content %}
@@ -37,13 +38,13 @@
                                         </div>
                                         <div class="mr-2">
                                         <a href="{% url 'export_departmnt' %}">
-                                            <button type="submit" class="btn btn-primary">
+                                            <buttontype="submit" class="btn btn-primary">
                                                 Export 
                                             </button>
                                         </a>
                                     </div>
                                         <div>
-                                            <a href="{% url 'department_add'%}">
+                                            <a href="{% url 'department_add' %}">
                                                 <button type="button" class="btn btn-success">
                                                     <i class="bi bi-plus-circle me-1"></i> Add Department
                                                 </button>
@@ -59,61 +60,10 @@
                                         <th scope="col" class="text-md dt-nowrap">Sl.No</th>
                                         <th scope="col" class="text-md dt-nowrap">Actions</th>
                                         <th scope="col" class="text-md dt-nowrap">Department Name</th>
-                                        <th scope="col" class="text-md dt-nowrap">Department Description</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for d in departments %}
-                                  <tr>
-                                    <th scope="row">{{ forloop.counter }}</th>
-                                    <td
-                                      class="justify-content-center align-content-center"
-                                      style="min-height: 100% !important; min-width: 100%"
-                                    >
-                                      <div class="d-flex">
-                                       
-                                        <a href="{% url 'department_edit'  d.department_id %}">
-                                          <button
-                                            type="button"
-                                            class="btn btn-outline-info"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            title="Edit"
-                                          >
-                                            <i class="bi bi-pencil-fill"></i>
-                                          </button> </a
-                                        >&nbsp;
-                                        <a href="{% url 'department_detail'  d.department_id %}">
-                                          <button
-                                            type="button"
-                                            class="btn btn-outline-success"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            title="Details"
-                                          >
-                                            <i class="bi bi-eye-fill"></i>
-                                          </button> </a
-                                        >&nbsp;
-                                        <a href="{% url 'department_delete' d.department_id %}">
-                                        <button
-                                          type="button"
-                                          class="btn btn-outline-danger"
-                                          data-bs-toggle="modal"
-                                          data-bs-target="#deleteModal"
-                                          title="Delete"
-                                        >
-                                          <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                        &nbsp;
-                                      </div>
-                                    </td>
-                                    <td class="dt-nowrap">{{d.department_name}}</td>
-                                    <td class="dt-nowrap">{{d.description}}</td>
-            
-                                    
-                                    
-                                  </tr>
-                                  {% endfor %}
+                                  
                                 </tbody>
                             </table>
                         </div>
@@ -143,20 +93,77 @@
                         <button type="submit" class="btn btn-primary">Upload</button>
                     </form>
                 </div>
+                <div class="modal-body">
+                    <form action="{% url 'download_excel' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Download</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Include Bootstrap JS and dependencies -->
+  
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!-- Include jQuery and DataTables JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.6/js/dataTables.responsive.min.js"></script>
-    
-    
+
+    <script>
+        $(document).ready(function () {
+            $("#depTable").dataTable().fnDestroy();
+            LoadTable();
+        });
+
+        function LoadTable() {
+            // Check if DataTable is already initialized
+           
+            
+
+            $('#depTable').DataTable({
+               "serverSide": true,
+            "aLengthMenu": [[10, 25, 50], [10, 25, 50]],
+            "paging": true,
+            "ordering":false,
+            "pageLength": 10,
+            "sPaginationType": "full_numbers",
+            "scrollX": false,
+            "destroy": true,
+            "processing": true,
+            "language": { "processing": 'Loading......!' },
+                "ajax": {
+                    "url": "{% url 'department_list' %}",
+                    "type": "POST",
+                    "dataType": "json",
+                    "data": function (d) {
+                        d.csrfmiddlewaretoken = '{{ csrf_token }}';
+                    },
+                    error: function (e) {
+                        $("#depTable tbody").empty().append('<tr class="odd"><td valign="top" colspan="16" class="dataTables_empty">ERROR</td></tr>');
+                    }
+                },
+                "columns": [
+                    { "data": "sl_no" },
+                    {
+                        "data": function (row, type, val, meta) {
+                            var varButtons = "";
+                            varButtons += '<a href="' + window.location.origin + '/department_edit/' + row.department_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/department_detail/' + row.department_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/department_delete/' + row.department_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                            return varButtons;
+                        }
+                    },
+                  
+                    { "data": "department_name" },
+                   
+                ],
+               
+                "drawCallback": function () {
+                    $('#depTable_paginate ul.pagination').addClass("pagination-rounded");
+                }
+            });
+        }
+    </script>
 </body>
 </html>
 {% endblock %}

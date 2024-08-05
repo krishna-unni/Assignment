@@ -15,10 +15,12 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from master.dbquery import department_list_query, designation_list_query, location_list_query
-import uuid
 import json
 from master.models import Department,User,Designation
 import openpyxl
+from django.http import HttpResponse
+import pandas as pd
+from io import BytesIO
 
 
 def indexpage(request):
@@ -61,17 +63,33 @@ def ad_logout(request):
     logout(request)
     return redirect(ad_login)
 
+# def department_list(request):
+#     print("ajjjjjjjjjjjh")
+#     if request.method == "GET":
+#         template_name = 'master/department_list.html'
+#         dep = department_list_query()
+#         print(dep,'dep')
+#         departments = [{'department_id': item[0], 'department_name': item[1], 'description': item[2]} for item in dep]
+#         context = {'departments':departments}
+#         return render(request, template_name, context )
+    
+@csrf_exempt
 def department_list(request):
-    print("ajjjjjjjjjjjh")
     if request.method == "GET":
         template_name = 'master/department_list.html'
-        dep = department_list_query()
-        print(dep,'dep')
-        departments = [{'department_id': item[0], 'department_name': item[1], 'description': item[2]} for item in dep]
-        context = {'departments':departments}
-        return render(request, template_name, context )
-    
+       
+        return render(request, template_name, )
 
+    if request.method == "POST":
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+       
+        dep = department_list_query(start_index, page_length, search_value, draw)
+       
+        return JsonResponse(dep)
+    
 
 def department_add(request):
     form = DepartmentForm()
@@ -215,6 +233,26 @@ def export_departmnt(request):
     response['Content-Disposition'] = 'attachment; filename=departments.xlsx'
 
     workbook.save(response)
+    return response
+
+
+def download_excel(request):
+    # Create an empty DataFrame
+    df = pd.DataFrame()
+    
+    # Create a BytesIO object to hold the Excel file
+    output = BytesIO()
+    
+    # Write the DataFrame to the BytesIO object
+    df.to_excel(output, index=False, engine='openpyxl')
+    
+    # Seek to the beginning of the BytesIO object
+    output.seek(0)
+    
+    # Create an HTTP response with the file content
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="empty_excel_sheet.xlsx"'
+    
     return response
 def designation_list(request):
     if request.method == "GET":

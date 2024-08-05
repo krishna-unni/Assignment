@@ -12,6 +12,8 @@ urlpatterns = [
     path('department_delete/<str:pk>/', views.department_delete, name='department_delete'),
     path('bulk_upload_depa/', views.bulk_upload_depa, name='bulk_upload_depa'),
     path('export_departmnt', views.export_departmnt, name='export_departmnt'),
+    path('download_excel',  views.download_excel, name='download_excel'),
+
 
 
     path('designation_list', views.designation_list, name='designation_list'),

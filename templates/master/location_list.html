@@ -144,6 +144,7 @@
                 <div class="modal-body">
                     <form action="{% url 'bulk_upload_location' %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
+                        
                         <div class="form-group">
                             <label for="file">Choose Excel file</label>
                             <input type="file" id="file" name="file" class="form-control">
