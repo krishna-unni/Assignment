@@ -73,7 +73,7 @@ def ad_logout(request):
 #         context = {'departments':departments}
 #         return render(request, template_name, context )
     
-@csrf_exempt
+# @csrf_exempt
 def department_list(request):
     if request.method == "GET":
         template_name = 'master/department_list.html'
@@ -254,14 +254,29 @@ def download_excel(request):
     response['Content-Disposition'] = 'attachment; filename="empty_excel_sheet.xlsx"'
     
     return response
+# def designation_list(request):
+#     if request.method == "GET":
+#         template_name = 'master/designation_list.html'
+#         des = designation_list_query()
+#         print(des,'des')
+#         designations = [{'designation_id': item[0], 'department': item[1],'designation_name':item[2], 'description': item[3]} for item in des]
+#         context = {'designations': designations}
+#         return render(request, template_name, context )
 def designation_list(request):
     if request.method == "GET":
         template_name = 'master/designation_list.html'
-        des = designation_list_query()
-        print(des,'des')
-        designations = [{'designation_id': item[0], 'department': item[1],'designation_name':item[2], 'description': item[3]} for item in des]
-        context = {'designations': designations}
-        return render(request, template_name, context )
+        return render(request, template_name)
+
+    if request.method == "POST":
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+       
+        des = designation_list_query(start_index, page_length, search_value, draw)
+       
+        return JsonResponse(des)
+    
 def designation_add(request):
     form = Designation_Form()
     template_name = 'master/add_designation.html'
@@ -392,15 +407,29 @@ def export_designations_to_excel(request):
     return response
 
 
+# def location_list(request):
+#     if request.method == "GET":
+#         template_name = 'master/location_list.html'
+#         location = location_list_query()
+#         print(location,'location')
+#         locations = [{'location_id': item[0], 'location_name': item[1], 'description': item[2]} for item in location]
+#         context = {'location': locations}
+#         return render(request, template_name, context )
 def location_list(request):
     if request.method == "GET":
         template_name = 'master/location_list.html'
-        location = location_list_query()
-        print(location,'location')
-        locations = [{'location_id': item[0], 'location_name': item[1], 'description': item[2]} for item in location]
-        context = {'location': locations}
-        return render(request, template_name, context )
+       
+        return render(request, template_name, )
 
+    if request.method == "POST":
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+       
+        loc = location_list_query(start_index, page_length, search_value, draw)
+       
+        return JsonResponse(loc)
 
 def locationn_add(request):
     form = LocationForm()

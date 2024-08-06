@@ -25,6 +25,7 @@ urlpatterns = [
     path('export_designations', views.export_designations_to_excel, name='export_designations'),
 
 
+
     path('location_list', views.location_list, name='location_list'),
     path('locationn_add', views.locationn_add, name='locationn_add'),
     path('locationn_edit/<str:pk>/', views.locationn_edit, name='locationn_edit'),
