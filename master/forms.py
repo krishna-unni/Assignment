@@ -37,3 +37,36 @@ class LocationForm(forms.ModelForm):
           
         }
 
+class DateInput(forms.DateInput):
+    input_type = 'date'
+    format = '%Y-%m-%d' 
+class EmpForm(forms.ModelForm):
+    class Meta:
+        model = Employee
+        fields = [ 'join_date', 'emp_no', 'name', 'phone', 'address', 'emp_start_date', 'emp_end_date', 'photo', 'status', 'department', 'designation', 'location']
+        widgets = {
+            'join_date': DateInput(attrs={'class': 'form-control', 'required': 'true', 'type': 'date'}),
+            'emp_no': forms.TextInput(attrs={'type': 'text', 'required': 'true'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'emp_start_date': forms.DateInput(attrs={'class': 'form-control', 'required': 'true', 'type': 'date'}),
+            'emp_end_date': forms.DateInput(attrs={'class': 'form-control', 'required': 'true', 'type': 'date'}),
+            'photo': forms.FileInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'status': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-control','id': 'department-dropdown'}),
+            'designation': forms.Select(attrs={'class': 'form-control','id': 'designation-dropdown'}),
+            'location': forms.Select(attrs={'class': 'form-control',})
+        }
+
+class SkillForm(forms.ModelForm):
+    class Meta:
+        model = Skill
+        fields = ['skill_name','description']
+        widgets = {
+            'skill_name': forms.TextInput(attrs={'type': 'text', 'required': 'true'}),
+            'description':forms.TextInput(attrs={'type': 'text', 'required': 'true'}),
+        }
+
+SkillFormSet = modelformset_factory(Skill, form=SkillForm, extra=0, can_delete=True)
+
+

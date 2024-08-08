@@ -9,12 +9,12 @@ from django.conf import settings
 from django.http import HttpResponse
 from datetime import datetime
 import os
-from master.forms import DepartmentForm, Designation_Form, LocationForm
+from master.forms import DepartmentForm, Designation_Form, LocationForm, EmpForm, SkillFormSet
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from master.dbquery import department_list_query, designation_list_query, location_list_query
+from master.dbquery import department_list_query, designation_list_query, location_list_query, employee_list_query
 import json
 from master.models import Department,User,Designation
 import openpyxl
@@ -561,3 +561,140 @@ def export_location(request):
 
     workbook.save(response)
     return response
+
+def employee_list(request):
+    if request.method == "GET":
+        template_name = 'master/employee_list.html'
+       
+        return render(request, template_name, )
+
+    if request.method == "POST":
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+       
+        emp = employee_list_query(start_index, page_length, search_value, draw)
+       
+        return JsonResponse(emp)
+    
+
+
+def employee_add(request):
+    form = EmpForm
+    formset = SkillFormSet(queryset=Skill.objects.none())
+    template_name = 'master/employee_add.html'
+    context = {'form': form, 'formset': formset}
+   
+    if request.method == 'POST':
+        print(request.user.id,"Form submitted")
+        form = EmpForm(request.POST, request.FILES)
+        formset = SkillFormSet(request.POST, queryset=Skill.objects.none())
+        if form.is_valid() and formset.is_valid():
+            print("Form is valid")
+            data = form.save()
+            # data.created_by =User.objects.get(id=request.user.id)
+            data.save()
+            
+            
+            for skill_form in formset:
+                skill = skill_form.save(commit=False)
+                skill.employee = data
+                skill.save()
+            messages.success(request, 'Employee Added Successfully', 'alert-success')
+            return redirect('employee_list')
+            
+        else:
+            print("Form is not valid")
+            print(form.errors)  
+            messages.error(request, 'Data is not valid.', extra_tags='alert-danger')
+            context = {'form': form,'formset': formset}
+            return render(request, template_name, context)
+    else :
+        print("Rendering form")
+        return render(request, template_name, context)
+def designations(request):
+    department_id = request.GET.get('department')
+    designations = Designation.objects.filter(department=department_id).all()
+    return JsonResponse(list(designations.values('designation_id', 'designation_name')), safe=False)
+
+
+def employee_edit(request, pk):
+    template_name = 'master/employee_edit.html'
+    try:
+        uuid_obj = uuid.UUID(pk)
+    except ValueError:
+        messages.error(request, 'Employee not found.', 'alert-danger')
+        return redirect('employee_list')
+    try:
+        emp_obj = get_object_or_404(Employee, employee_id=pk)
+    except emp_obj.DoesNotExist:
+        messages.error(request, 'Employee not found.', 'alert-danger')
+        return redirect('employee_list')
+   
+    if request.method == 'POST':
+        form = EmpForm(request.POST, request.FILES, instance=emp_obj)
+        formset = SkillFormSet(request.POST, queryset=Skill.objects.filter(employee=emp_obj))
+        
+        if form.is_valid() :
+         
+            employee = form.save(commit=False)
+            employee.save()
+           
+            if formset.is_valid():
+                for i in formset:
+                  
+                    skill = i.save()
+                    skill.employee = employee
+                    skill.save()
+             
+            messages.success(request, 'Employee Successfully Updated.', 'alert-success')
+            return redirect('employee_list')
+        else:
+          
+            messages.error(request, 'Data is not valid.', 'alert-danger')
+    else:
+        form = EmpForm(instance=emp_obj)
+        formset = SkillFormSet(queryset=Skill.objects.filter(employee=emp_obj))
+    
+    context = {'form': form, 'formset': formset, 'emp_obj': emp_obj}
+    return render(request, template_name, context)
+
+
+
+def employee_detail(request,pk):
+     
+    try:
+       
+        uuid_obj = uuid.UUID(pk)
+    except ValueError:
+        messages.error(request, 'employee not found.', 'alert-danger')
+        return redirect('employee_list')
+
+    try:
+         employee = get_object_or_404(Employee,employee_id=pk)
+    except employee.DoesNotExist:
+        messages.error(request, 'employee not found.', 'alert-danger')
+        return redirect('employee_list')
+    
+    department=employee.department.department_name
+    designation=employee.designation.designation_name
+    location=employee.location.location_name
+    skills = Skill.objects.filter(employee=employee)
+    
+    context = {
+        
+        'employee': employee,
+        'department':department,
+        'location':location,
+        'designation':designation,
+        'skills': skills,
+    }
+    
+    return render(request, 'master/employee_detail.html', context)
+   
+def employee_delete(request, pk):
+    employee = Employee.objects.get(employee_id=pk)
+    employee.delete()
+    messages.success(request, 'Employee Deleted Successfully', 'alert-success')
+    return redirect('employee_list')
