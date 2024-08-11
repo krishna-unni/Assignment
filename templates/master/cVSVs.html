@@ -142,7 +142,14 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-               
+                <div class="modal-body">
+                    <input type="hidden" id="employeeId">
+                    <div class="form-group">
+                        <label for="recipientEmail">Recipient Email</label>
+                        <input type="email" id="recipientEmail" class="form-control" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="sendEmailBtn">Send</button>
+                </div>
             </div>
         </div>
     </div>
@@ -306,19 +313,8 @@
                     window.location.href = '{% url "download_template" %}';
                 });
             });
-            
-
-
-
-            $('#download_selected').click(function () {
-                var selectedIds = Array.from(selectedEmployeeIds).join(',');
-                if (selectedIds.length > 0) {
-                    window.location.href = '{% url "download_selected" %}?ids=' + selectedIds;
-                } else {
-                    alert('No employees selected');
-                }
-            });
-           
+    
+        
         });
     </script>
     

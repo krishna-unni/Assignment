@@ -222,7 +222,8 @@ def location_list_query(start_index, page_length, search_value, draw):
 
 
 
-def employee_list_query(start_index, page_length, search_value, draw):
+def employee_list_query(start_index, page_length, search_value, draw, start_date=None, end_date=None):
+    # Set default values if start_index or page_length are None
     start_index = start_index if start_index is not None else 0
     page_length = page_length if page_length is not None else 10
     
@@ -234,6 +235,7 @@ def employee_list_query(start_index, page_length, search_value, draw):
         start_index = 0
         page_length = 10
     
+    # Base SQL script
     script1 = ''' 
     SELECT 
         e.employee_id, e.join_date, e.emp_no, e.name, e.phone, e.address, 
@@ -254,26 +256,47 @@ def employee_list_query(start_index, page_length, search_value, draw):
     WHERE e.name <> 'ALL'
     '''
     
+    # Add search filter
     if search_value:
         search_script = " AND e.name LIKE %s"
         script1 += search_script
         script2 += search_script
-
+    
+    # Add date filter
+    if start_date and end_date:
+        date_filter = " AND e.emp_start_date >= %s AND e.emp_end_date <= %s"
+        script1 += date_filter
+        script2 += date_filter
+    
+    # Order and limit results
     script1 += " ORDER BY e.name ASC LIMIT %s OFFSET %s;"
-
+    
+    # Prepare parameters for the queries
+    params = []
+    if search_value:
+        params.append('%' + search_value + '%')
+    if start_date and end_date:
+        params.append(start_date)
+        params.append(end_date)
+    params.extend([page_length, start_index])
+    
+    # Execute the queries
     with connection.cursor() as cursor:
-        if search_value:
-            cursor.execute(script1, ('%' + search_value + '%', page_length, start_index))
-        else:
-            cursor.execute(script1, (page_length, start_index))
+        cursor.execute(script1, params)
         employees = cursor.fetchall()
 
+        # Adjust parameters for the count query
+        count_params = []
         if search_value:
-            cursor.execute(script2, ('%' + search_value + '%',))
-        else:
-            cursor.execute(script2)
+            count_params.append('%' + search_value + '%')
+        if start_date and end_date:
+            count_params.append(start_date)
+            count_params.append(end_date)
+
+        cursor.execute(script2, count_params)
         total_records = cursor.fetchone()[0]
 
+    # Process results
     employee_list = []
     sl_no = start_index + 1
 
@@ -288,7 +311,7 @@ def employee_list_query(start_index, page_length, search_value, draw):
             'address': row[5],
             'emp_start_date': row[6],
             'emp_end_date': row[7],
-            'photo': settings.MEDIA_URL + row[8],
+            'photo': settings.MEDIA_URL + row[8] if row[8] else '',  # Handle case where photo might be None
             'status': row[9],
             'department_name': row[10],
             'designation_name': row[11],

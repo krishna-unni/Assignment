@@ -573,12 +573,12 @@ def employee_list(request):
         page_length = request.POST.get('length')
         search_value = request.POST.get('search[value]')
         draw = request.POST.get('draw')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
        
-        emp = employee_list_query(start_index, page_length, search_value, draw)
+        emp = employee_list_query(start_index, page_length, search_value, draw, start_date, end_date)
        
         return JsonResponse(emp)
-    
-
 
 def employee_add(request):
     form = EmpForm
@@ -698,3 +698,234 @@ def employee_delete(request, pk):
     employee.delete()
     messages.success(request, 'Employee Deleted Successfully', 'alert-success')
     return redirect('employee_list')
+
+
+
+def save_uploaded_file(uploaded_file, save_directory):
+    try:      
+        file_name, uploaded_file = next(iter(uploaded_file.items()))
+        if not os.path.exists(save_directory):
+            os.makedirs(save_directory)
+        # Construct the full path to save the file
+        save_path = os.path.join(save_directory, uploaded_file.name)
+        print(save_path,'save')
+        # Save the file to the specified directory
+        with default_storage.open(save_path, 'wb+') as destination:
+            for chunk in uploaded_file.chunks():
+                destination.write(chunk)
+        print(f"File saved at {save_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def bulk_upload_employee(request):
+    # if request.method == 'POST':
+    #     files = request.FILES.getlist('files')  # Accessing multiple files using getlist()
+    #     print(files)
+    #     photo_files = {file.name: file for file in files if file.name.endswith(('.png', '.jpg', '.jpeg'))} 
+    #     save_directory = 'employee_photos'
+    #     save_uploaded_file(photo_files, save_directory)
+    #     print(photo_files,"photo_files") # Collect photo files
+    #     errors = []
+    #     for uploaded_file in files:
+    #         try:
+    #             data = handle_uploaded_file(uploaded_file)  # Process each file using your utility function
+    #             for row in data:
+    #                 join_date = row[0]
+    #                 emp_no = row[1]
+    #                 name = row[2]
+    #                 phone = row[3]
+    #                 address = row[4]
+    #                 emp_start_date = row[5]
+    #                 emp_end_date = row[6]
+    #                 status = row[7]
+    #                 department_name = row[8]
+    #                 designation_name = row[9]
+    #                 location_name = row[10]
+    #                 photo_name  = row[11]
+    #                 skills_data = row[12:]  # Assuming skills data starts from the 12th column onwards                  
+    #                 employee_exists = Employee.objects.filter(emp_no=emp_no).exists()
+    #                 if employee_exists:
+    #                     raise ValueError(f'Employee with Employee No. {emp_no} already exists.')
+
+    #                 department = Department.objects.filter(department_name=department_name).first()
+    #                 designation = Designation.objects.filter(designation_name=designation_name, department=department).first()
+    #                 location = Location.objects.filter(location_name=location_name).first()
+
+    #                 if not department or not designation or not location:
+    #                     raise ValueError('Invalid department, designation, or location')                                  
+    #                 photo_file = photo_files.get(photo_name)
+    #                 print(photo_file)                   
+    #                 employee = Employee.objects.create(
+    #                     emp_no=emp_no,
+    #                     join_date=join_date,
+    #                     name=name,
+    #                     phone=phone,
+    #                     address=address,
+    #                     emp_start_date=emp_start_date,
+    #                     emp_end_date=emp_end_date,
+    #                     status=status,
+    #                     department=department,
+    #                     designation=designation,
+    #                     location=location,
+    #                     photo='employee_photos'+'/'+photo_name
+    #                 )
+    #                 # Create associated skills
+    #                 for i in range(0, len(skills_data), 2):  # Assuming each skill has two columns: skill_name and description
+    #                     skill_name = skills_data[i]
+    #                     skill_description = skills_data[i + 1]
+    #                     Skill.objects.create(employee=employee, skill_name=skill_name, description=skill_description)            
+    #         except Exception as e:
+    #             errors.append(str(e))
+    #     if errors:
+    #         for error in errors:
+    #             messages.error(request, error)
+    #     else:
+    #         messages.success(request, 'Employees uploaded successfully.')
+    #     return redirect('employee_list')
+    # return render(request, 'employee_list.html')
+    if request.method == 'POST':
+        if 'files' in request.FILES:
+            excel_file = request.FILES['files']
+            if not excel_file.name.endswith('.xlsx'):
+                return HttpResponse('Invalid file format. Please upload an Excel file.', status=400)
+
+            # Read the Excel file
+            df = pd.read_excel(excel_file)
+
+            # Process the DataFrame (assuming columns are 'Employee No', 'Name', etc.)
+            for index, row in df.iterrows():
+                Employee.objects.update_or_create(
+                    emp_no=row['Employee No'],
+                    defaults={
+                        'name': row['Name'],
+                        'department_name': row['Department'],
+                        'designation_name': row['Designation']
+                    }
+                )
+
+            return redirect('employee_list')  # Redirect to the employee list page or another page after upload
+
+    return HttpResponse('Invalid request method.', status=405)
+
+def filter_employees(request):
+    if request.method == "GET":
+        template_name = 'employee_list.html'
+        return render(request, template_name)
+
+    if request.method == "POST":
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        emp = employee_list_query(start_index, page_length, search_value, draw, start_date, end_date)
+
+        return JsonResponse(emp)
+    
+
+def export_employee(request):
+    employee = Employee.objects.all()
+    data = []
+
+    for index, employee in enumerate(employee, start=1):
+        photo_url = employee.photo.url if employee.photo and default_storage.exists(employee.photo.name) else ''
+
+        data.append({
+            'Sl.No': index,
+            'Employee No': employee.emp_no,
+            'Join Date': employee.join_date,
+            'Name': employee.name,
+            'Phone': employee.phone,
+            'Address': employee.address,
+            'Emp Start Date': employee.emp_start_date,
+            'Emp End Date': employee.emp_end_date,
+            'Photo': photo_url,
+            'Status': employee.status,
+            'Department': employee.department.department_name if employee.department else '',
+            'Designation': employee.designation.designation_name if employee.designation else '',
+            'Location': employee.location.location_name if employee.location else '',
+            'Skills': ', '.join([skill.skill_name for skill in employee.skills.all()]),
+            
+        })
+
+    df = pd.DataFrame(data)
+
+    # Create an HTTP response with the Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=employee.xlsx'
+
+    # Write the DataFrame to the response
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='employee')
+
+    return response
+def download_template(request):
+    # Employee details template
+    employee_data = {
+        'Employee ID': [],
+        'Join Date': [],
+        'Employee No': [],
+        'Name': [],
+        'Phone': [],
+        'Address': [],
+        'Employee Start Date': [],
+        'Employee End Date': [],
+        'Photo': [],
+        'Status': [],
+        'Department': [],
+        'Designation': [],
+        'Location': []
+    }
+    
+    # Skills details template
+    skills_data = {
+        'Skill ID': [],
+        'Employee ID': [],
+        'Skill Name': [],
+        'Description': []
+    }
+    
+    # Create DataFrames
+    df_employee = pd.DataFrame(employee_data)
+    df_skills = pd.DataFrame(skills_data)
+    
+    # Create a BytesIO buffer
+    buffer = BytesIO()
+    
+    # Write the DataFrames to the buffer
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df_employee.to_excel(writer, sheet_name='Employees', index=False)
+        df_skills.to_excel(writer, sheet_name='Skills', index=False)
+    
+    # Get the content of the buffer
+    buffer.seek(0)
+    
+    # Create the HTTP response
+    response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=template.xlsx'
+    
+    return response
+
+from django.shortcuts import get_list_or_404
+import csv
+
+def download_selected(request):
+    ids = request.GET.get('ids', '')
+    id_list = ids.split(',')
+    
+    # Fetch the selected employees from the database
+    employees = get_list_or_404(Employee, employee_id__in=id_list)
+    
+    # Create a CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=selected_employees.csv'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Employee No', 'Name', 'Department', 'Designation'])
+    
+    for emp in employees:
+        writer.writerow([emp.emp_no, emp.name, emp.department, emp.designation])
+    
+    return response

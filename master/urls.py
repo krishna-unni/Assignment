@@ -40,8 +40,22 @@ urlpatterns = [
     path('employee_add', views.employee_add, name='employee_add'),
     path('designations', views.designations, name='designations'),
     path('employee_edit/<str:pk>/', views.employee_edit, name='employee_edit'),
-    path('employee_delete/<str:pk>/', views.employee_delete, name='employee_delete'),
     path('employee_detail/<str:pk>/', views.employee_detail, name='employee_detail'),
+    path('employee_delete/<str:pk>/', views.employee_delete, name='employee_delete'),
+    path('bulk_upload_employee/', views.bulk_upload_employee, name='bulk_upload_employee'),
+    path('filter_employees/', views.filter_employees, name='filter_employees'),
+    path('export_employee/', views.export_employee, name='export_employee'),
+    path('download_template/', views.download_template, name='download_template'),
+    path('download_selected/', views.download_selected, name='download_selected'),
+
+    
+
+
+    
+
+
+
+
 
 
 
