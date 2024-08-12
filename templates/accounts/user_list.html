@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+{% extends 'index.html' %}
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  
+    <main id="main" class="main">
+        <div class="pagetitle">
+          <h1>User</h1>
+          <nav>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+              <li class="breadcrumb-item">Master</li>
+              <li class="breadcrumb-item active">User List</li>
+            </ol>
+          </nav>
+        </div>
+        <section class="section">
+          <div class="row">
+              <div class="col-lg-12">
+                  <div class="card border border-primary">
+                      <div class="card-body">
+                          <div class="card-title">
+                              <div class="d-lg-flex">
+                                  <div>
+                                      <h5 class="card-heading">List Of users</h5>
+                                  </div>
+                                  <div class="ms-auto my-auto mt-lg-0 mt-4 d-flex">
+                                      <div class="mr-2">
+                                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
+                                              Upload
+                                          </button>
+                                      </div>
+                                      <div class="mr-2">
+                                      <a href="{% url 'export_user'%}">
+                                          <buttontype="submit" class="btn btn-primary">
+                                              Export 
+                                          </button>
+                                      </a>
+                                  </div>
+                                      <div>
+                                          <a href="{% url 'user_add' %}">
+                                              <button type="button" class="btn btn-success">
+                                                  <i class="bi bi-plus-circle me-1"></i> Add User
+                                              </button>
+                                          </a>
+                                      </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <table class="display responsive" style="width: 100%" id="userTable">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="text-md dt-nowrap">Sl.No</th>
+                                        <th scope="col" class="text-md dt-nowrap">Actions</th>
+                                        <th scope="col" class="text-md dt-nowrap">User</th>
+                                        <th scope="col" class="text-md dt-nowrap">Email</th> <!-- New column for email -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="spacex mb-5"></div>
+      </main>
+              </div>
+            </div>
+          </div>
+         
+        </section>
+        <div class="spacex mb-5"></div>
+      </main>
+      <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Excel File</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'bulk_upload_user'%}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="file">Choose Excel file</label>
+                            <input type="file" id="file" name="file" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and dependencies -->
+  
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+      <script>
+        $(document).ready(function () {
+            $("#userTable").dataTable().fnDestroy();
+            LoadTable();
+        });
+
+        function LoadTable() {
+            // Check if DataTable is already initialized
+           
+            
+
+            $('#userTable').DataTable({
+                "serverSide": true,
+                "aLengthMenu": [[10, 25, 50], [10, 25, 50]],
+                "paging": true,
+                "ordering": false,
+                "pageLength": 10,
+                "sPaginationType": "full_numbers",
+                "scrollX": false,
+                "destroy": true,
+                "processing": true,
+                "language": { "processing": 'Loading......!' },
+                "ajax": {
+                    "url": "{% url 'user_list' %}",
+                    "type": "POST",
+                    "dataType": "json",
+                    "data": function (d) {
+                        d.csrfmiddlewaretoken = '{{ csrf_token }}';
+                    },
+                    error: function (e) {
+                        $("#userTable tbody").empty().append('<tr class="odd"><td valign="top" colspan="16" class="dataTables_empty">ERROR</td></tr>');
+                    }
+                },
+                "columns": [
+                    { "data": "sl_no" },
+                    {
+                        "data": function (row, type, val, meta) {
+                            var varButtons = "";
+                            varButtons += '<a href="' + window.location.origin + '/users_edit/' + row.id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/user_detail/' + row.id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/users_delete/' + row.id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                            return varButtons;
+                        }
+                    },
+                    { "data": "username" },
+                    { "data": "email" }  // New column for email
+                ],
+                "drawCallback": function () {
+                    $('#userTable_paginate ul.pagination').addClass("pagination-rounded");
+                }
+            });
+        }
+    </script>
+    </body>
+    </html>
+    {% endblock %}

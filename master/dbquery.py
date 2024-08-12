@@ -329,4 +329,69 @@ def employee_list_query(start_index, page_length, search_value, draw, start_date
         "data": employee_list
     }
     return response
+def user_list_query(start_index, page_length, search_value, draw):
+    # Ensure start_index and page_length are not None
+    if start_index is None:
+        start_index = 0  # Default to 0 if not provided
+    if page_length is None:
+        page_length = 10  # Default to 10 if not provided
 
+    script1 = '''
+    SELECT 
+        u.id, u.username, u.email
+    FROM master_user u
+    WHERE u.username <> 'ALL'
+    '''
+    
+    script2 = '''
+    SELECT COUNT(*) 
+    FROM master_user u
+    WHERE u.username <> 'ALL'
+    '''
+
+    if search_value:
+        search_script = " AND u.username LIKE %s"
+        script1 += search_script
+        script2 += search_script
+
+    script1 += " ORDER BY u.username ASC LIMIT %s OFFSET %s;"
+
+    with connection.cursor() as cursor:
+        if search_value:
+            cursor.execute(script1, ('%' + search_value + '%', int(page_length), int(start_index)))
+        else:
+            cursor.execute(script1, (int(page_length), int(start_index)))
+        users = cursor.fetchall()
+
+        if search_value:
+            cursor.execute(script2, ('%' + search_value + '%',))
+        else:
+            cursor.execute(script2)
+        total_records = cursor.fetchone()[0]
+
+    user_list = []
+    if isinstance(start_index, int):
+        sl_no = int(start_index) + 1
+    else:
+        sl_no = 1
+
+    for row in users:
+        user = {
+            'sl_no': sl_no,
+            'id': row[0],
+            'username': row[1],
+            'email': row[2],  # Assuming the email column is also fetched
+        }
+        user_list.append(user)
+       
+        sl_no += 1
+
+    filtered_records = total_records
+
+    response = {
+        "draw": draw,
+        "recordsTotal": total_records,
+        "recordsFiltered": filtered_records,
+        "data": user_list
+    }
+    return response

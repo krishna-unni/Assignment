@@ -9,18 +9,26 @@ from django.conf import settings
 from django.http import HttpResponse
 from datetime import datetime
 import os
-from master.forms import DepartmentForm, Designation_Form, LocationForm, EmpForm, SkillFormSet
+from master.forms import DepartmentForm, Designation_Form, LocationForm, EmpForm, SkillFormSet, UseraddForm ,UsereditForm
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from master.dbquery import department_list_query, designation_list_query, location_list_query, employee_list_query
+from master.dbquery import department_list_query, designation_list_query, location_list_query, employee_list_query,user_list_query
 import json
 from master.models import Department,User,Designation
 import openpyxl
 from django.http import HttpResponse
 import pandas as pd
 from io import BytesIO
+from django.shortcuts import get_list_or_404
+import csv
+from django.contrib.auth.hashers import make_password, check_password
+import logging
+logger = logging.getLogger(__name__)
+
+
+
 
 
 def indexpage(request):
@@ -177,6 +185,17 @@ def department_delete(request, pk):
     department.delete()
     messages.success(request, 'Department Deleted Successfully', 'alert-success')
     return redirect('department_list')
+# def handle_uploaded_file(file):
+#     workbook = openpyxl.load_workbook(file)
+#     sheet = workbook.active
+
+#     data = []
+#     for row in sheet.iter_rows(min_row=2, values_only=True):
+#         print(f"Row data: {row}")  # Log row data for debugging
+#         if row[0] is not None:  # Ensure department_name is not None
+#             data.append(row)
+
+#     return data
 def handle_uploaded_file(file):
     workbook = openpyxl.load_workbook(file)
     sheet = workbook.active
@@ -184,11 +203,14 @@ def handle_uploaded_file(file):
     data = []
     for row in sheet.iter_rows(min_row=2, values_only=True):
         print(f"Row data: {row}")  # Log row data for debugging
-        if row[0] is not None:  # Ensure department_name is not None
+        
+        # Check if row has enough columns
+        if len(row) >= 6 and all(row[:6]):  # Ensure all necessary fields are present and not None
             data.append(row)
+        else:
+            print(f"Skipping incomplete row: {row}")  # Log skipped rows for debugging
 
     return data
-
 def bulk_upload_depa(request):
     if request.method == 'POST':
         if 'file' not in request.FILES:
@@ -664,13 +686,11 @@ def employee_edit(request, pk):
 
 def employee_detail(request,pk):
      
-    try:
-       
+    try:       
         uuid_obj = uuid.UUID(pk)
     except ValueError:
         messages.error(request, 'employee not found.', 'alert-danger')
         return redirect('employee_list')
-
     try:
          employee = get_object_or_404(Employee,employee_id=pk)
     except employee.DoesNotExist:
@@ -718,71 +738,6 @@ def save_uploaded_file(uploaded_file, save_directory):
         print(f"An error occurred: {e}")
 
 def bulk_upload_employee(request):
-    # if request.method == 'POST':
-    #     files = request.FILES.getlist('files')  # Accessing multiple files using getlist()
-    #     print(files)
-    #     photo_files = {file.name: file for file in files if file.name.endswith(('.png', '.jpg', '.jpeg'))} 
-    #     save_directory = 'employee_photos'
-    #     save_uploaded_file(photo_files, save_directory)
-    #     print(photo_files,"photo_files") # Collect photo files
-    #     errors = []
-    #     for uploaded_file in files:
-    #         try:
-    #             data = handle_uploaded_file(uploaded_file)  # Process each file using your utility function
-    #             for row in data:
-    #                 join_date = row[0]
-    #                 emp_no = row[1]
-    #                 name = row[2]
-    #                 phone = row[3]
-    #                 address = row[4]
-    #                 emp_start_date = row[5]
-    #                 emp_end_date = row[6]
-    #                 status = row[7]
-    #                 department_name = row[8]
-    #                 designation_name = row[9]
-    #                 location_name = row[10]
-    #                 photo_name  = row[11]
-    #                 skills_data = row[12:]  # Assuming skills data starts from the 12th column onwards                  
-    #                 employee_exists = Employee.objects.filter(emp_no=emp_no).exists()
-    #                 if employee_exists:
-    #                     raise ValueError(f'Employee with Employee No. {emp_no} already exists.')
-
-    #                 department = Department.objects.filter(department_name=department_name).first()
-    #                 designation = Designation.objects.filter(designation_name=designation_name, department=department).first()
-    #                 location = Location.objects.filter(location_name=location_name).first()
-
-    #                 if not department or not designation or not location:
-    #                     raise ValueError('Invalid department, designation, or location')                                  
-    #                 photo_file = photo_files.get(photo_name)
-    #                 print(photo_file)                   
-    #                 employee = Employee.objects.create(
-    #                     emp_no=emp_no,
-    #                     join_date=join_date,
-    #                     name=name,
-    #                     phone=phone,
-    #                     address=address,
-    #                     emp_start_date=emp_start_date,
-    #                     emp_end_date=emp_end_date,
-    #                     status=status,
-    #                     department=department,
-    #                     designation=designation,
-    #                     location=location,
-    #                     photo='employee_photos'+'/'+photo_name
-    #                 )
-    #                 # Create associated skills
-    #                 for i in range(0, len(skills_data), 2):  # Assuming each skill has two columns: skill_name and description
-    #                     skill_name = skills_data[i]
-    #                     skill_description = skills_data[i + 1]
-    #                     Skill.objects.create(employee=employee, skill_name=skill_name, description=skill_description)            
-    #         except Exception as e:
-    #             errors.append(str(e))
-    #     if errors:
-    #         for error in errors:
-    #             messages.error(request, error)
-    #     else:
-    #         messages.success(request, 'Employees uploaded successfully.')
-    #     return redirect('employee_list')
-    # return render(request, 'employee_list.html')
     if request.method == 'POST':
         if 'files' in request.FILES:
             excel_file = request.FILES['files']
@@ -908,8 +863,7 @@ def download_template(request):
     
     return response
 
-from django.shortcuts import get_list_or_404
-import csv
+
 
 def download_selected(request):
     ids = request.GET.get('ids', '')
@@ -928,4 +882,159 @@ def download_selected(request):
     for emp in employees:
         writer.writerow([emp.emp_no, emp.name, emp.department, emp.designation])
     
+    return response
+
+
+@csrf_exempt
+def user_list(request):
+    if request.method == "GET":
+        template_name = 'accounts/user_list.html'
+       
+        return render(request, template_name, )
+
+    if request.method == "POST":
+       
+        start_index = request.POST.get('start')
+        page_length = request.POST.get('length')
+        search_value = request.POST.get('search[value]')
+        draw = request.POST.get('draw')
+       
+        user = user_list_query(start_index, page_length, search_value, draw)
+       
+        return JsonResponse(user)
+    
+
+def user_add(request):
+    form = UseraddForm
+   
+    template_name = 'accounts/user_add.html'
+    
+    context = {'form': form}
+    if request.method == 'POST':
+        form = UseraddForm(request.POST, request.FILES)
+        
+        if form.is_valid() :
+            data = form.save(commit=False)
+           
+            passw = data.password
+            passw = make_password(passw)
+            data.password = passw
+           
+            data.save()
+            messages.success(request, 'User Added Successfully', 'alert-success')
+            return redirect('user_list')
+        else:
+            messages.error(request, 'Data is not valid.', 'alert-danger')
+            context = {'form': form,}
+            return render(request, template_name, context)
+    else:
+        return render(request, template_name, context)
+    
+
+@login_required(login_url='ad_login')    
+def user_edit(request, pk):
+    template_name = 'accounts/user_edit.html'
+
+    try:
+        # Fetch the user by primary key (assumed to be an integer)
+        user_obj = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.', 'alert-danger')
+        return redirect('user_list')
+
+    if request.method == 'POST':
+        form = UsereditForm(request.POST, request.FILES, instance=user_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User Updated Successfully', 'alert-success')
+            return redirect('user_list')
+        else:
+            messages.error(request, 'Data is not valid.', 'alert-danger')
+            context = {'form': form}
+            return render(request, template_name, context)
+    else:
+        form = UsereditForm(instance=user_obj)
+        context = {'form': form}
+        return render(request, template_name, context)
+    
+def user_detail(request,pk):
+    try:
+         user = get_object_or_404(User,id=pk)
+    except user.DoesNotExist:
+        messages.error(request, 'user not found.', 'alert-danger')
+        return redirect('user_list')    
+    context = {
+        'user': user
+    }    
+    return render(request, 'accounts/user_detail.html', context)
+
+def user_delete(request, pk):
+    user = User.objects.get(id=pk)    
+    user.delete()
+    messages.success(request, 'User Deleted Successfully', 'alert-success')
+    return redirect('user_list')
+def bulk_upload_user(request):
+    if request.method == 'POST':
+        data = handle_uploaded_file(request.FILES['file'])
+      
+        for row in data:
+            try:
+                username = row[0]
+                email = row[1]
+                first_name = row[2]
+                last_name = row[3]
+                password = row[4]
+                role = row[5]
+                
+                # Check for existing username
+                if not User.objects.filter(username=username).exists():
+                    User.objects.create(
+                        username=username,
+                        email=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        role=role,
+                        password=make_password(password)
+                    )
+                else:
+                    logging.warning(f"Username {username} already exists. Skipping this entry.")
+            except IndexError:
+                logging.error(f"Row is incomplete or malformed: {row}")
+                
+        return redirect('user_list')
+    
+    
+
+def export_user(request):
+    workbook = openpyxl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Users'
+
+    columns = ['Sl.No', 'Username', 'Email', 'First Name', 'Last Name']
+    row_num = 1
+
+   
+    for col_num, column_title in enumerate(columns, 1):
+        cell = worksheet.cell(row=row_num, column=col_num)
+        cell.value = column_title
+
+    for index, user in enumerate(User.objects.all(), start=1):
+        row_num += 1
+        row = [
+            index,
+            user.username,
+            user.email,
+            user.first_name,
+            user.last_name,
+        ]
+
+        for col_num, cell_value in enumerate(row, 1):
+            cell = worksheet.cell(row=row_num, column=col_num)
+            cell.value = cell_value
+
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=users.xlsx'
+
+    workbook.save(response)
     return response

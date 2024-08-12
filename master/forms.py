@@ -69,4 +69,29 @@ class SkillForm(forms.ModelForm):
 
 SkillFormSet = modelformset_factory(Skill, form=SkillForm, extra=0, can_delete=True)
 
+class UseraddForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password', 'role']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'role': forms.Select(attrs={'class': 'form-control'}, choices=User.ROLE_TYPES),
+        }
+class UsereditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email',  'role']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'required': 'true'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+           
+            'role': forms.Select(attrs={'class': 'form-control'}, choices=User.ROLE_TYPES),
+        }
+
 
