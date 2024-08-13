@@ -26,7 +26,8 @@ import csv
 from django.contrib.auth.hashers import make_password, check_password
 import logging
 logger = logging.getLogger(__name__)
-
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponseForbidden
 
 
 
@@ -36,36 +37,33 @@ def indexpage(request):
 
 def ad_login(request):
     template_name = 'login.html'
+    
     if request.method == 'POST':
         username = request.POST.get('username')
-        print(username,'username')
         password = request.POST.get('password')
-        print(password,'password')
 
-        # user_exist = User.objects.filter(username=username).exists()
-        # print(user_exist,'user_exist')
-        # if user_exist:
-        user = authenticate(request, username=username, password=password)
-        print('user',user)
-        if user is not None:
-            if user.role == 'ADMIN' :
-                login(request, user)
+        user_exist = User.objects.filter(username=username).exists()
         
-                return redirect('indexpage')
-            elif user.role == 'VIEWER':
-                login(request, user)
-                return redirect('indexpage')
+        if user_exist:
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                if user.role == 'ADMIN' or user.role == 'VIEWER':
+                    login(request, user)
+                    return redirect('indexpage')
+                else:
+                    context = {'msg': 'Invalid Username or Password!'}
+                    return render(request, template_name, context)
             else:
-                context = {'msg': 'Invalid Username or Password!'}
+                context = {'msg': 'Password is incorrect!'}
                 return render(request, template_name, context)
         else:
-            context = {'msg': 'Password is incorrect!'}
+            context = {'msg': 'User Does Not exist'}
             return render(request, template_name, context)
-        # else:
-        #     context = {'msg': 'User Does Not exist'}
-        #     return render(request, template_name, context)  
-    return render(request, template_name)
 
+    # Handle GET request
+    else:
+        return render(request, template_name)
 
 def ad_logout(request):
     logout(request)
@@ -884,7 +882,8 @@ def download_selected(request):
     
     return response
 
-
+def is_admin(user):
+    return user.is_authenticated and user.role == 'ADMIN'
 @csrf_exempt
 def user_list(request):
     if request.method == "GET":
@@ -903,6 +902,7 @@ def user_list(request):
        
         return JsonResponse(user)
     
+@user_passes_test(is_admin)
 
 def user_add(request):
     form = UseraddForm
@@ -930,9 +930,13 @@ def user_add(request):
     else:
         return render(request, template_name, context)
     
-
-@login_required(login_url='ad_login')    
+@login_required(login_url='ad_login')
 def user_edit(request, pk):
+    # Check if the logged-in user is a Viewer
+    if request.user.role == 'VIEWER':
+        messages.error(request, 'You do not have permission to edit users.', 'alert-danger')
+        return redirect('user_list')
+
     template_name = 'accounts/user_edit.html'
 
     try:
@@ -950,12 +954,11 @@ def user_edit(request, pk):
             return redirect('user_list')
         else:
             messages.error(request, 'Data is not valid.', 'alert-danger')
-            context = {'form': form}
-            return render(request, template_name, context)
     else:
         form = UsereditForm(instance=user_obj)
-        context = {'form': form}
-        return render(request, template_name, context)
+
+    context = {'form': form}
+    return render(request, template_name, context)
     
 def user_detail(request,pk):
     try:
@@ -968,6 +971,8 @@ def user_detail(request,pk):
     }    
     return render(request, 'accounts/user_detail.html', context)
 
+@login_required(login_url='ad_login')
+@user_passes_test(is_admin)
 def user_delete(request, pk):
     user = User.objects.get(id=pk)    
     user.delete()

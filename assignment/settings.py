@@ -120,6 +120,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+AUTH_USER_MODEL = 'master.User'
+
+LOGIN_URL = '/indexpage/'
+LOGOUT_REDIRECT_URL='ad_login/'
 
 
 # Static files (CSS, JavaScript, Images)
