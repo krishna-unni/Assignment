@@ -162,7 +162,7 @@
             var alllist = new Set();
             var new_total = [];
             var new_list_count = [];
-    
+    // updateSelectedCount
             function updateSelectedCount() {
                 var selectAllChecked = $('#select_all').is(':checked');
                 if (selectAllChecked) {
@@ -178,7 +178,7 @@
             }
     
            
-    
+    //load table
             function LoadTable(start_date, end_date) {
                 if ($.fn.DataTable.isDataTable('#empTable')) {
                     $('#empTable').DataTable().clear().destroy();
@@ -230,7 +230,7 @@
                         { "data": "department_name" },
                         { "data": "designation_name" },
                     ],
-                    "drawCallback": function () {
+                     "drawCallback": function () {
                         $('#empTable_paginate ul.pagination').addClass("pagination-rounded");
                         var api = this.api();
                         var total = api.ajax.json().recordsTotal;
@@ -241,7 +241,7 @@
                             var data = this.data();
                             if (!selectedEmployeeIds.has(data.employee_id)) {
                                 allChecked = false;
-                                return false;
+                                return false;  
                             }
                         });
                         $('#select_all').prop('checked', allChecked);
