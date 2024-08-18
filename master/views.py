@@ -98,6 +98,8 @@ def department_list(request):
     
 
 def department_add(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     form = DepartmentForm()
     template_name = 'master/add_department.html'
     context = {'form': form}
@@ -128,6 +130,8 @@ def department_add(request):
     
 # @login_required(login_url='ad_login')    
 def department_edit(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     template_name = 'master/department_edit.html'
     try:
         uuid_obj = uuid.UUID(pk)
@@ -158,6 +162,8 @@ def department_edit(request, pk):
     
 # @login_required(login_url='ad_login')
 def department_detail(request,pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     try:
        
         uuid_obj = uuid.UUID(pk)
@@ -178,6 +184,8 @@ def department_detail(request,pk):
 
 # @login_required(login_url='ad_login')
 def department_delete(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     department = Department.objects.get(department_id=pk)
     
     department.delete()
@@ -210,6 +218,8 @@ def handle_uploaded_file(file):
 
     return data
 def bulk_upload_depa(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     if request.method == 'POST':
         if 'file' not in request.FILES:
             # Handle missing file error
@@ -257,6 +267,8 @@ def export_departmnt(request):
 
 
 def download_excel(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     # Create an empty DataFrame
     df = pd.DataFrame()
     
@@ -298,6 +310,8 @@ def designation_list(request):
         return JsonResponse(des)
     
 def designation_add(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     form = Designation_Form()
     template_name = 'master/add_designation.html'
     context = {'form': form}
@@ -331,6 +345,8 @@ def designation_add(request):
 
 # @login_required(login_url='adlogin')   
 def designation_edit(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     template_name = 'master/designation_edit.html'
     try:
         uuid_obj = uuid.UUID(pk)
@@ -360,6 +376,8 @@ def designation_edit(request, pk):
         return render(request, template_name, context)
     
 def designation_detail(request,pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     try:
        uuid_obj = uuid.UUID(pk)
     except ValueError:
@@ -380,11 +398,15 @@ def designation_detail(request,pk):
     return render(request, 'master/designation_detail.html', context)
 
 def designation_delete(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     designation = Designation.objects.get(designation_id=pk)
     designation.delete()
     messages.success(request, 'Designation Deleted Successfully', 'alert-success')
     return redirect('designation_list')
 def bulk_upload_des(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     if request.method == 'POST':
        
         data = handle_uploaded_file(request.FILES['file'])
@@ -452,6 +474,8 @@ def location_list(request):
         return JsonResponse(loc)
 
 def locationn_add(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     form = LocationForm()
     template_name = 'master/location_add.html'
     context = {'form': form}
@@ -484,6 +508,8 @@ def locationn_add(request):
     
  
 def locationn_edit(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     template_name = 'master/location_edit.html'
     try:
         uuid_obj = uuid.UUID(pk)
@@ -514,6 +540,8 @@ def locationn_edit(request, pk):
         return render(request, template_name, context)
     
 def locationn_detail(request,pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     try:
        
         uuid_obj = uuid.UUID(pk)
@@ -536,6 +564,8 @@ def locationn_detail(request,pk):
     
 
 def locationn_delete(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     location = Location.objects.get(location_id=pk)
     
     location.delete()
@@ -543,6 +573,8 @@ def locationn_delete(request, pk):
     return redirect('location_list')
 
 def bulk_upload_location(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     if request.method == 'POST':
         data = handle_uploaded_file(request.FILES['file'])      
         for row in data:            
@@ -601,6 +633,8 @@ def employee_list(request):
         return JsonResponse(emp)
 
 def employee_add(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     form = EmpForm
     formset = SkillFormSet(queryset=Skill.objects.none())
     template_name = 'master/employee_add.html'
@@ -638,9 +672,12 @@ def designations(request):
     designations = Designation.objects.filter(department=department_id).all()
     return JsonResponse(list(designations.values('designation_id', 'designation_name')), safe=False)
 
-
+@login_required(login_url='ad_login')
 def employee_edit(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     template_name = 'master/employee_edit.html'
+    
     try:
         uuid_obj = uuid.UUID(pk)
     except ValueError:
@@ -683,7 +720,8 @@ def employee_edit(request, pk):
 
 
 def employee_detail(request,pk):
-     
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.") 
     try:       
         uuid_obj = uuid.UUID(pk)
     except ValueError:
@@ -712,6 +750,8 @@ def employee_detail(request,pk):
     return render(request, 'master/employee_detail.html', context)
    
 def employee_delete(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     employee = Employee.objects.get(employee_id=pk)
     employee.delete()
     messages.success(request, 'Employee Deleted Successfully', 'alert-success')
@@ -736,6 +776,8 @@ def save_uploaded_file(uploaded_file, save_directory):
         print(f"An error occurred: {e}")
 
 def bulk_upload_employee(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     if request.method == 'POST':
         if 'files' in request.FILES:
             excel_file = request.FILES['files']
@@ -881,6 +923,213 @@ def download_selected(request):
         writer.writerow([emp.emp_no, emp.name, emp.department, emp.designation])
     
     return response
+def generate_employee_pdf(employee_id):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    employee = Employee.objects.get(employee_id=employee_id)
+
+    # Add a heading with a larger font
+    p.setFont("Helvetica-Bold", 18)
+    p.drawString(100, height - 50, "Employee Details")
+
+ 
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(70, height - 90, "Employee Name:")
+    p.drawString(70, height - 110, "Employee Number:")
+    p.drawString(70, height - 130, "Join Date:")
+    p.drawString(70, height - 150, "Phone:")
+    p.drawString(70, height - 170, "Address:")
+    p.drawString(70, height - 190, "Start Date:")
+    p.drawString(70, height - 210, "End Date:")
+    p.drawString(70, height - 230, "Status:")
+    p.drawString(70, height - 250, "Department:")
+    p.drawString(70, height - 270, "Designation:")
+    p.drawString(70, height - 290, "Location:")
+
+    # Add employee data with regular font
+    p.setFont("Helvetica", 12)
+    p.drawString(200, height - 90, str(employee.name))
+    p.drawString(200, height - 110, str(employee.emp_no))
+    p.drawString(200, height - 130, str(employee.join_date))
+    p.drawString(200, height - 150, str(employee.phone))
+    p.drawString(200, height - 170, str(employee.address))
+    p.drawString(200, height - 190, str(employee.emp_start_date))
+    p.drawString(200, height - 210, str(employee.emp_end_date) if employee.emp_end_date else 'N/A')
+    p.drawString(200, height - 230, str(employee.status))
+    p.drawString(200, height - 250, str(employee.department))
+    p.drawString(200, height - 270, str(employee.designation))
+    p.drawString(200, height - 290, str(employee.location))
+
+    # Add employee photo with a label
+    if employee.photo:
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(70, height - 320, "Employee Photo:")
+        p.drawImage(employee.photo.path, 200, height - 440, width=100, preserveAspectRatio=True)
+       
+
+    # Footer
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawString(70, 50, "Generated by datahub technologies")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
+def download_employee(request, employee_id):
+    employee = get_object_or_404(Employee, employee_id=employee_id)
+    buffer = generate_employee_pdf(employee_id)
+
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{employee.name}_details.pdf"'
+    return response
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404, render
+from django.core.mail import EmailMessage
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from io import BytesIO
+from xhtml2pdf import pisa
+
+from django.core.mail import EmailMessage, BadHeaderError
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.units import inch
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+
+def generate_pdf(employee):
+    # Create a PDF buffer to hold the PDF data
+    buffer = BytesIO()
+
+    # Create the PDF document with the specified page size
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    # Add employee photo if available
+    if employee.photo:  # Assuming you have a `photo` field in your Employee model
+        try:
+            photo_path = employee.photo.path
+            img = Image(photo_path, width=2*inch, height=2*inch)
+            elements.append(img)
+            elements.append(Spacer(1, 12))
+        except Exception as e:
+            # Handle the case where the photo cannot be loaded
+            print(f"Error loading image: {e}")
+
+    # Retrieve related data
+    department = employee.department.department_name
+    designation = employee.designation.designation_name
+    location = employee.location.location_name
+    skills = Skill.objects.filter(employee=employee)
+
+    # Get styles for text formatting
+    styles = getSampleStyleSheet()
+
+    # Add employee details to the PDF
+    elements.append(Paragraph(f"Employee No: {employee.emp_no}", styles['Title']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Name: {employee.name}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Phone: {employee.phone}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Address: {employee.address}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Employee Join Date: {employee.join_date}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Employee Start Date: {employee.emp_start_date}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Employee End Date: {employee.emp_end_date}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Status: {employee.status}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Department: {department}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Designation: {designation}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    elements.append(Paragraph(f"Location: {location}", styles['Normal']))
+    elements.append(Spacer(1, 12))  # Add space between elements
+
+    # Add skills to the PDF, handling the case where there are no skills
+    if skills.exists():
+        skills_list = ', '.join(skill.skill_name for skill in skills)
+    else:
+        skills_list = 'No skills recorded'
+
+    elements.append(Paragraph(f"Skills: {skills_list}", styles['Normal']))
+
+    # Build the PDF document
+    doc.build(elements)
+
+    # Get the PDF data from the buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf
+
+def mail_pdf(request,employee_id):
+     # Ensure the request method is POST
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Invalid request method. Use POST.")
+
+    # Get the employee object or return a 404 error if not found
+    employee = get_object_or_404(Employee, employee_id=employee_id)
+    
+    # Generate the PDF
+    pdf = generate_pdf(employee)
+    
+    # Get email address from POST data
+    recipient_email = request.POST.get('email')
+    if not recipient_email:
+        return HttpResponseBadRequest("No email address provided.")
+    
+    # Define the email subject and body
+    subject = f"Employee Report for {employee.name}"
+    body = f"Dear {employee.name},\n\nPlease find attached the PDF report containing your details.\n\nBest regards,\nYour Company"
+    
+    try:
+        # Create an email message
+        email = EmailMessage(
+            subject,
+            body,
+            'your_email@example.com',  # Replace with your sender email address
+            [recipient_email],  # Replace with the employee's email address
+        )
+        
+        # Attach the PDF
+        email.attach(f"employee_{employee.emp_no}.pdf", pdf, 'application/pdf')
+        
+        # Send the email
+        email.send()
+
+        # Return a success response
+        messages.success(request, 'Email sent successfully.','alert-success')
+        return redirect('employee_list')
+
+    except Exception as e:
+        # Log the exception and return an error response
+        print(f"Error sending email: {e}")
+        return HttpResponseServerError("An error occurred while sending the email.")
+# -------------------------------------------------user---------------
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'ADMIN'
@@ -903,8 +1152,9 @@ def user_list(request):
         return JsonResponse(user)
     
 @user_passes_test(is_admin)
-
 def user_add(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     form = UseraddForm
    
     template_name = 'accounts/user_add.html'
@@ -932,6 +1182,8 @@ def user_add(request):
     
 @login_required(login_url='ad_login')
 def user_edit(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     # Check if the logged-in user is a Viewer
     if request.user.role == 'VIEWER':
         messages.error(request, 'You do not have permission to edit users.', 'alert-danger')
@@ -961,6 +1213,8 @@ def user_edit(request, pk):
     return render(request, template_name, context)
     
 def user_detail(request,pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     try:
          user = get_object_or_404(User,id=pk)
     except user.DoesNotExist:
@@ -974,11 +1228,15 @@ def user_detail(request,pk):
 @login_required(login_url='ad_login')
 @user_passes_test(is_admin)
 def user_delete(request, pk):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     user = User.objects.get(id=pk)    
     user.delete()
     messages.success(request, 'User Deleted Successfully', 'alert-success')
     return redirect('user_list')
 def bulk_upload_user(request):
+    if request.user.role == 'VIEWER':
+        return HttpResponseForbidden("You are not allowed to perform this action.")
     if request.method == 'POST':
         data = handle_uploaded_file(request.FILES['file'])
       
@@ -1043,4 +1301,6 @@ def export_user(request):
 
     workbook.save(response)
     return response
+
+
 

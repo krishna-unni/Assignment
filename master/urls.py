@@ -50,6 +50,15 @@ urlpatterns = [
     path('export_employee/', views.export_employee, name='export_employee'),
     path('download_template/', views.download_template, name='download_template'),
     path('download_selected/', views.download_selected, name='download_selected'),
+    path('download_employee/<str:employee_id>/', views.download_employee, name='download_employee'),
+    path('mail_pdf/<str:employee_id>/', views.mail_pdf, name='mail_pdf'),
+
+
+
+    
+
+
+
 
 
     # ----------------------------accounts-------------------------------------------------

@@ -11,6 +11,25 @@
         .select-checkbox {
             cursor: pointer;
         }
+        .btn-custom {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+        }
+        
+        .btn-custom:hover {
+            background-color: #45a049; /* Darker green */
+        }
+
+        .modal-header-custom {
+            background-color: #f8f9fa; /* Light grey */
+            color: #333; /* Dark text */
+        }
+        
+        .modal-body-custom {
+            background-color: #ffffff; /* White background */
+            color: #333; /* Dark text */
+        }
     </style>
 </head>
 <body>
@@ -47,25 +66,28 @@
                                     </div>
                                     
                                     <div class="ms-auto my-auto mt-lg-0 mt-4 d-flex">
-                                        <div class="mr-2">
-                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
-                                                Upload
-                                            </button>
-                                        </div>
-                                        <div class="mr-2">
-                                            <a href="{% url 'export_employee' %}">
-                                                <button type="button" class="btn btn-primary">
-                                                    Export 
+                                        {% if request.user.role != 'VIEWER' %}
+
+                                            <div class="mr-2">
+                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
+                                                    Upload
                                                 </button>
-                                            </a>
-                                        </div>
-                                        <div>
-                                            <a href="{% url 'employee_add'%}">
-                                                <button type="button" class="btn btn-success">
-                                                    <i class="bi bi-plus-circle me-1"></i> Add Employee
-                                                </button>
-                                            </a>
-                                        </div>
+                                            </div>
+                                            <div class="mr-2">
+                                                <a href="{% url 'export_employee' %}">
+                                                    <button type="button" class="btn btn-primary">
+                                                        Export 
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'employee_add'%}">
+                                                    <button type="button" class="btn btn-success">
+                                                        <i class="bi bi-plus-circle me-1"></i> Add Employee
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        {% endif%}
                                     </div>
                                 </div>
                             </div>
@@ -131,21 +153,41 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal for sending email -->
-    <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="emailModalLabel">Send Employee PDF</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-               
-            </div>
+<div
+    class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title" id="exampleModalLabel">Send Email</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
+        
+        
+        <!-- End of message content -->
+        <div class="modal-body modal-body-custom">          
+            <form id="mailForm" method="post" action="{% url 'mail_pdf' 0 %}">
+                <label for="email">Enter Email Address:</label>
+                <input type="email" id="email" name="email" required>
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success">Send</button>
+            </form>
+
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-custom" data-bs-dismiss="modal">Close</button>
+          </div>
+          
+        </div>
+      </div>
     </div>
+  </div>
+  
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -219,9 +261,17 @@
                         {
                             "data": function (row, type, val, meta) {
                                 var varButtons = "";
+                                {% if request.user.role != 'VIEWER' %}
+
+                                var varButtons = "";
                                 varButtons += '<a href="' + window.location.origin + '/employee_edit/' + row.employee_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
                                 varButtons += '<a href="' + window.location.origin + '/employee_detail/' + row.employee_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
                                 varButtons += '<a href="' + window.location.origin + '/employee_delete/' + row.employee_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                                varButtons += '<a href="' + window.location.origin + '/download_employee/' + row.employee_id + '" class="me-1"><button type="button" class="btn btn-outline-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="download pdf"><i class="bi bi-download"></i></button></a>';
+                                varButtons += '<button type="button" class="btn btn-custom" data-bs-toggle="modal" data-bs-target="#emailModal" data-employee-id="' + row.employee_id + '" title="Send Mail">' +
+                                    '<i class="bi bi-envelope"></i>' +
+                                    '</button>&nbsp;';
+                                {% endif %}
                                 return varButtons;
                             }
                         },
@@ -321,7 +371,22 @@
            
         });
     </script>
-    
-</body>
-</html>
+    <script>
+        // JavaScript to handle the modal
+        document.addEventListener('DOMContentLoaded', function () {
+          var emailModal = document.getElementById('emailModal');
+          emailModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            var button = event.relatedTarget;
+            // Extract info from data-* attributes
+            var employeeId = button.getAttribute('data-employee-id');
+            // Update the form action URL
+            var form = emailModal.querySelector('form');
+            form.action = "{% url 'mail_pdf' 0 %}".replace('0', employeeId);
+          });
+        });
+      </script>
+        
+    </body>
+    </html>
 {% endblock %}

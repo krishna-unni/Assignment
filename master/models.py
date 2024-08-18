@@ -78,6 +78,7 @@ class Employee(Base):
                              on_delete=models.SET_NULL)
     location = models.ForeignKey('master.Location', max_length=250, null=True, blank=True, related_name='emp_loc',
                              on_delete=models.SET_NULL)
+
     def __str__(self):
         return self.name   
 

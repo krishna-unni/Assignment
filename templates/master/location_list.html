@@ -30,29 +30,32 @@
                                       <h5 class="card-heading">List Of Department</h5>
                                   </div>
                                   <div class="ms-auto my-auto mt-lg-0 mt-4 d-flex">
+                                    {% if request.user.role != 'VIEWER' %}
+
                                       <div class="mr-2">
                                           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
                                               Upload
                                           </button>
                                       </div>
-                                      <div class="mr-2">
-                                        <a href="{% url 'export_location' %}">
-                                            <buttontype="submit" class="btn btn-primary">
-                                                Export 
-                                            </button>
-                                        </a>
-                                    </div>
+                                        <div class="mr-2">
+                                            <a href="{% url 'export_location' %}">
+                                                <buttontype="submit" class="btn btn-primary">
+                                                    Export 
+                                                </button>
+                                            </a>
+                                        </div>
                                      
-                                      <div>
+                                        <div>
                                           <a href="{% url 'locationn_add' %}">
                                               <button type="button" class="btn btn-success">
                                                   <i class="bi bi-plus-circle me-1"></i> Add Location
                                               </button>
                                           </a>
-                                      </div>
+                                        </div>
+                                    {% endif %}
                                       </div>
                                   </div>
- </div>
+                                </div>
                   <table
                     class="display responsive"
                     style="width: 100%"
@@ -154,11 +157,14 @@
                   { "data": "sl_no" },
                   {
                       "data": function (row, type, val, meta) {
-                          var varButtons = "";
-                          varButtons += '<a href="' + window.location.origin + '/locationn_edit/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
-                          varButtons += '<a href="' + window.location.origin + '/locationn_detail/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
-                          varButtons += '<a href="' + window.location.origin + '/locationn_delete/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
-                          return varButtons;
+                        var varButtons = "";
+                        {% if request.user.role != 'VIEWER' %}
+
+                            varButtons += '<a href="' + window.location.origin + '/locationn_edit/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/locationn_detail/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
+                            varButtons += '<a href="' + window.location.origin + '/locationn_delete/' + row.location_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                        {% endif %}
+                        return varButtons;
                       }
                   },
                 

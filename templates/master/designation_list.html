@@ -31,6 +31,8 @@
                                         <h5 class="card-heading">List Of Designation</h5>
                                     </div>
                                     <div class="ms-auto my-auto mt-lg-0 mt-4 d-flex">
+                                        {% if request.user.role != 'VIEWER' %}
+
                                         <div class="mr-2">
                                             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
                                                 Upload
@@ -50,6 +52,8 @@
                                                 </button>
                                             </a>
                                         </div>
+                                        {% endif %}
+
                                     </div>
                                 </div>
                             </div>
@@ -136,9 +140,13 @@
                     {
                         "data": function (row) {
                             var varButtons = "";
-                            varButtons += '<a href="' + window.location.origin + '/designation_edit/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
-                            varButtons += '<a href="' + window.location.origin + '/designation_detail/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
-                            varButtons += '<a href="' + window.location.origin + '/designation_delete/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                            {% if request.user.role != 'VIEWER' %}
+
+                                varButtons += '<a href="' + window.location.origin + '/designation_edit/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="edit"><i class="bi bi-pencil-fill"></i></button></a>';
+                                varButtons += '<a href="' + window.location.origin + '/designation_detail/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="detail"><i class="bi bi-info-circle"></i></button></a>';
+                                varButtons += '<a href="' + window.location.origin + '/designation_delete/' + row.designation_id + '" class="me-1"><button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="delete"><i class="bi bi-trash"></i></button></a>';
+                            {% endif %}
+
                             return varButtons;
                         }
                     },
