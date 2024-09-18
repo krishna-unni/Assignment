@@ -46,6 +46,12 @@ from reportlab.lib.units import inch
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from reportlab.lib.pagesizes import letter
 
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Protection
+from io import BytesIO
+
+
 
 
 def indexpage(request):
@@ -281,27 +287,77 @@ def export_departmnt(request):
     workbook.save(response)
     return response
 
-
 def download_excel(request):
-    if request.user.role == 'VIEWER':
-        return HttpResponseForbidden("You are not allowed to perform this action.")
-    # Create an empty DataFrame
-    df = pd.DataFrame()
-    
-    # Create a BytesIO object to hold the Excel file
+    # Create a workbook and select the active worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Template"
+
+    # Define headings and their values
+    headings = ['Heading 1', 'Heading 2', 'Heading 3']
+    values = [1, 2, 3]
+    subheadings = ['Subhead1', 'Subhead2', 'Subhead3', 'Subhead4', 'Subhead5']
+    sub_values = list(range(1, 11))
+
+    # Write headings and values
+    for i, heading in enumerate(headings):
+        ws.cell(row=1, column=i+1, value=heading)
+        ws.cell(row=2, column=i+1, value=values[i])
+
+    # Write subheadings and their values
+    for i, subheading in enumerate(subheadings):
+        ws.cell(row=3, column=i+1, value=subheading)
+        for j, sub_value in enumerate(sub_values):
+            ws.cell(row=4 + j, column=i+1, value=sub_value)
+
+    # Freeze panes to keep the first 3 rows and columns up to C visible
+    ws.freeze_panes = 'D4'  # Freezes everything above row 4 and to the left of column D
+
+    # Protect specific subheading columns (Subhead2, Subhead3, Subhead4) and their values
+    columns_to_freeze = ['B', 'C', 'D']  # Corresponding to Subhead2, Subhead3, and Subhead4
+
+    # Unlock all cells first
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.protection = Protection(locked=False)
+
+    # Lock the Subhead2, Subhead3, and Subhead4 columns and their values
+    for col in columns_to_freeze:
+        for row in range(3, 15):  # Assuming there are 10 values under the subheadings
+            ws[f'{col}{row}'].protection = Protection(locked=True)
+
+    # Lock the A2 and B2 cells specifically
+    ws['A2'].protection = Protection(locked=True)
+    ws['B2'].protection = Protection(locked=True)
+
+    # Enable sheet protection
+    ws.protection.sheet = True
+    ws.protection.auto_filter = True
+    ws.protection.sort = True
+    ws.protection.format_cells = True
+    ws.protection.format_columns = True
+    ws.protection.format_rows = True
+    ws.protection.insert_rows = True
+    ws.protection.insert_columns = True
+    ws.protection.delete_rows = True
+    ws.protection.delete_columns = True
+    ws.protection.pivot_tables = True
+    ws.protection.objects = True
+
+    # Optionally, allow users to select locked cells
+    ws.protection.allow_select_locked_cells = True
+
+    # Save the workbook to a BytesIO object
     output = BytesIO()
-    
-    # Write the DataFrame to the BytesIO object
-    df.to_excel(output, index=False, engine='openpyxl')
-    
-    # Seek to the beginning of the BytesIO object
+    wb.save(output)
     output.seek(0)
-    
-    # Create an HTTP response with the file content
+
+    # Create HTTP response to download the file
     response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="empty_excel_sheet.xlsx"'
-    
+    response['Content-Disposition'] = 'attachment; filename=template.xlsx'
     return response
+
+
 # def designation_list(request):
 #     if request.method == "GET":
 #         template_name = 'master/designation_list.html'
